@@ -1,11 +1,10 @@
 package com.example.springdatajpa.config;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import com.example.springdatajpa.entity.secondary.Subscriber;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -13,46 +12,48 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import java.util.HashMap;
 
+/**
+ * @author ThinkPad
+ */
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        entityManagerFactoryRef = "entityManagerFactorySecondary",
-        transactionManagerRef = "transactionManagerSecondary",
-        basePackages = {"com.example.springdatajpa.repository.secondary"}) //设置Repository所在位置
+        entityManagerFactoryRef = "secondaryEntityManagerFactory",
+        transactionManagerRef = "secondaryTransactionManager")
 public class SecondaryConfig {
 
-    @Bean(name = "secondaryDataSource")
-    @Qualifier("secondaryDataSource")
-    @Primary
+    @Bean
     @ConfigurationProperties(prefix = "spring.datasource.secondary")
     public DataSource secondaryDataSource() {
         return DataSourceBuilder.create().build();
     }
 
-    @Bean(name = "entityManagerFactorySecondary")
-    public LocalContainerEntityManagerFactoryBean entityManagerFactorySecondary(@Qualifier("secondaryDataSource") DataSource dataSource) {
+    @Bean
+    public LocalContainerEntityManagerFactoryBean secondaryEntityManagerFactory() {
+
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         vendorAdapter.setGenerateDdl(true);
+
         LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-        factory.setJpaVendorAdapter(vendorAdapter);
-        factory.setPackagesToScan("com.example.springdatajpa.entity.secondary");
-        HashMap<String, Object> properties = new HashMap<>();
+
+        HashMap<String, Object> properties = new HashMap<>(4);
         properties.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
         properties.put("hibernate.physical_naming_strategy", "org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy");
+
+        factory.setJpaVendorAdapter(vendorAdapter);
+        factory.setPackagesToScan(Subscriber.class.getPackage().getName());
         factory.setJpaPropertyMap(properties);
-        factory.setDataSource(dataSource);
+        factory.setDataSource(secondaryDataSource());
+
         return factory;
     }
 
-    @Bean(name = "transactionManagerSecondary")
-    public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
-        JpaTransactionManager txManager = new JpaTransactionManager();
-        txManager.setEntityManagerFactory(entityManagerFactory);
-        return txManager;
+    @Bean
+    public PlatformTransactionManager secondaryTransactionManager() {
+        return new JpaTransactionManager(secondaryEntityManagerFactory().getObject());
     }
 
 }
