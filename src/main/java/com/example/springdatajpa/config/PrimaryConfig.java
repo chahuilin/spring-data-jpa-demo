@@ -23,6 +23,7 @@ import java.util.HashMap;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
+        basePackages = "com.example.springdatajpa.repository.primary",
         entityManagerFactoryRef = "primaryEntityManagerFactory",
         transactionManagerRef = "primaryTransactionManager")
 public class PrimaryConfig {

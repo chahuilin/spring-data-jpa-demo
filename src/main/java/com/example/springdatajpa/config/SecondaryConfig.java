@@ -21,6 +21,7 @@ import java.util.HashMap;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
+        basePackages = "com.example.springdatajpa.repository.secondary",
         entityManagerFactoryRef = "secondaryEntityManagerFactory",
         transactionManagerRef = "secondaryTransactionManager")
 public class SecondaryConfig {

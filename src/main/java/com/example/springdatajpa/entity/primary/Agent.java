@@ -20,7 +20,6 @@ public class Agent {
     private String enterpriseId;
     private String userId;
     private String outboundLineId;
-    private long groupId;
     private long status;
     private String username;
     private String password;
